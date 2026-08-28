@@ -1,0 +1,612 @@
+<meta charset="UTF-8">
+<title>선율의 미술관</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg-0:#080a14;
+    --bg-1:#0d1224;
+    --bg-2:#141a33;
+    --paper:#faf3e3;
+    --paper-shadow:#00000066;
+    --ink:#2b2620;
+    --line:#5b6796;
+    --line-soft:#3c4468;
+    --white:#f7f5ef;
+    --white-dim:#c8cbdc;
+    --accent-1:#ff8a65;
+    --accent-2:#7fd8c9;
+    --accent-3:#ffd166;
+    --accent-4:#b39ddb;
+    --accent-5:#ef9fc0;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:var(--bg-0);
+    overflow:hidden;
+    font-family:"Noto Sans KR", sans-serif;
+  }
+
+  body{
+    position:relative;
+  }
+
+  /* ---------- backdrop ---------- */
+
+  #sky{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 46%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+  }
+
+  #stars{
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
+
+  /* ---------- stage ---------- */
+
+  #stage{
+    position:fixed;
+    inset:0;
+    z-index:2;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  #graph{
+    position:relative;
+    width:100%;
+    min-width:1180px;
+    height:100%;
+    min-height:900px;
+  }
+
+  /* ---------- center ---------- */
+
+  #center{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:clamp(120px,14vw,190px);
+    height:clamp(120px,14vw,190px);
+    border-radius:50%;
+    background:radial-gradient(circle at 38% 32%, #2a3260 0%, #171d3c 55%, #0e1330 100%);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 0 40px 6px rgba(120,140,255,0.18),
+      0 0 90px 20px rgba(90,110,220,0.12),
+      inset 0 0 30px rgba(0,0,0,0.5);
+    animation:breathe 5.5s ease-in-out infinite;
+  }
+
+  #center span{
+    font-family:"Gaegu", sans-serif;
+    font-weight:700;
+    font-size:clamp(2.6rem,4.2vw,3.6rem);
+    color:var(--white);
+    letter-spacing:0.5px;
+    text-shadow:0 0 18px rgba(255,255,255,0.55), 0 0 46px rgba(150,170,255,0.35);
+    user-select:none;
+  }
+
+  @keyframes breathe{
+    0%,100%{ box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 0 40px 6px rgba(120,140,255,0.18),
+      0 0 90px 20px rgba(90,110,220,0.12),
+      inset 0 0 30px rgba(0,0,0,0.5); }
+    50%{ box-shadow:
+      0 0 0 1px rgba(255,255,255,0.09),
+      0 0 54px 10px rgba(140,160,255,0.26),
+      0 0 110px 28px rgba(100,120,230,0.16),
+      inset 0 0 30px rgba(0,0,0,0.5); }
+  }
+
+  #caption{
+    position:absolute;
+    left:50%;
+    top:calc(50% + clamp(72px,7.5vw,110px));
+    transform:translateX(-50%);
+    z-index:5;
+    color:var(--white-dim);
+    font-size:0.78rem;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    white-space:nowrap;
+    opacity:0.65;
+    user-select:none;
+  }
+
+  /* ---------- links (svg) ---------- */
+
+  #links{
+    position:absolute;
+    inset:0;
+    z-index:3;
+    pointer-events:none;
+  }
+
+  #links line{
+    stroke:var(--line);
+    stroke-width:1;
+    opacity:0.38;
+    vector-effect:non-scaling-stroke;
+  }
+
+  #links line.hi{
+    stroke:var(--accent-3);
+    opacity:0.85;
+    stroke-width:1.4;
+  }
+
+  /* ---------- nodes ---------- */
+
+  .node{
+    position:absolute;
+    z-index:4;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transform-origin:50% 50%;
+    animation:bob 6s ease-in-out infinite;
+    cursor:pointer;
+  }
+
+  .node .pin{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffe1a8, #d98a3d 70%);
+    box-shadow:0 1px 3px rgba(0,0,0,0.6);
+    margin-bottom:-6px;
+    z-index:2;
+  }
+
+  .card{
+    width:clamp(70px,6.2vw,92px);
+    padding:8px 8px 10px;
+    background:var(--paper);
+    border-radius:5px;
+    box-shadow:
+      0 10px 22px -6px var(--paper-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+    transition:transform 0.25s cubic-bezier(.2,.8,.3,1.3), box-shadow 0.25s ease;
+  }
+
+  .node:hover .card, .node:focus-visible .card{
+    transform:scale(1.12) rotate(0deg) !important;
+    box-shadow:
+      0 16px 34px -8px var(--paper-shadow),
+      0 0 0 2px var(--accent-3),
+      0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  .node:focus-visible{ outline:none; }
+
+  .art{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:2px;
+    display:block;
+  }
+
+  .art img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:2px;
+    display:block;
+  }
+
+  .title{
+    font-family:"Gaegu", sans-serif;
+    font-size:0.92rem;
+    color:var(--ink);
+    text-align:center;
+    margin-top:6px;
+    line-height:1.15;
+    user-select:none;
+  }
+
+  @keyframes bob{
+    0%{ transform:translate(0,0) rotate(var(--rot)); }
+    50%{ transform:translate(var(--dx),var(--dy)) rotate(calc(var(--rot) * -1)); }
+    100%{ transform:translate(0,0) rotate(var(--rot)); }
+  }
+
+  /* ---------- lightbox ---------- */
+
+  #lightbox{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(4,5,12,0.86);
+    backdrop-filter:blur(6px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.3s ease;
+    padding:5vh 5vw;
+  }
+
+  #lightbox.open{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  #lightbox-card{
+    position:relative;
+    max-width:min(560px,88vw);
+    background:var(--paper);
+    border-radius:8px;
+    padding:22px 22px 26px;
+    box-shadow:0 30px 70px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+    transform:scale(0.85) translateY(14px);
+    transition:transform 0.35s cubic-bezier(.2,.8,.2,1.15);
+  }
+
+  #lightbox.open #lightbox-card{
+    transform:scale(1) translateY(0);
+  }
+
+  #lightbox-art{
+    width:min(52vh,480px);
+    max-width:100%;
+    aspect-ratio:1/1;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  #lightbox-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  #lightbox-title{
+    font-family:"Gaegu", sans-serif;
+    font-weight:700;
+    font-size:1.5rem;
+    color:var(--ink);
+    margin:16px 2px 2px;
+  }
+
+  #lightbox-meta{
+    font-size:0.82rem;
+    color:#6b6355;
+    margin:4px 2px 0;
+    letter-spacing:0.3px;
+  }
+
+  #lightbox-close{
+    position:absolute;
+    top:-16px;
+    right:-16px;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    border:none;
+    background:var(--white);
+    color:var(--ink);
+    font-size:1.1rem;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.4);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #lightbox-close:hover{ background:var(--accent-3); }
+
+  /* ---------- misc ---------- */
+
+  #hint{
+    position:fixed;
+    left:50%;
+    bottom:22px;
+    transform:translateX(-50%);
+    z-index:6;
+    color:var(--white-dim);
+    font-size:0.72rem;
+    letter-spacing:1.5px;
+    opacity:0.5;
+    user-select:none;
+    text-transform:uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .node, #center{ animation:none !important; }
+  }
+</style>
+
+<div id="sky"></div>
+<canvas id="stars"></canvas>
+
+<div id="stage">
+  <div id="graph">
+    <svg id="links" width="100%" height="100%"></svg>
+    <div id="center"><span>6살</span></div>
+    <div id="caption">박선율 · 그림 그래프</div>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<div id="hint">그림을 눌러 크게 보기</div>
+
+<div id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+  <div id="lightbox-card">
+    <button id="lightbox-close" aria-label="닫기">✕</button>
+    <div id="lightbox-art"></div>
+    <div id="lightbox-title"></div>
+    <div id="lightbox-meta"></div>
+  </div>
+</div>
+
+<script src="artworks-data.js"></script>
+<script>
+(function(){
+
+  /* ===================================================================
+     선율이의 진짜 그림으로 자동 업데이트하려면?
+     ---------------------------------------------------------------
+     "6살에 만든 작품" 폴더에 사진을 넣고 그림_업데이트.bat 를 실행하면
+     artworks-data.js 가 새로 만들어지고, 이 페이지를 새로고침하면
+     바로 반영돼요. (자세한 방법은 같은 폴더의 사용법.txt 참고)
+
+     artworks-data.js 가 없거나 비어 있을 때는 아래 DEFAULT_ARTWORKS
+     예시 그림이 대신 보여요 — 직접 수정해도 되지만, 폴더에 사진을
+     넣는 방식이 훨씬 편해요.
+     =================================================================== */
+
+  const DEFAULT_ARTWORKS = [
+    { title:"해님", medium:"크레파스", date:"2026.02", color:"#ffb84d", icon:"sun", img:null },
+    { title:"무지개", medium:"색연필", date:"2026.03", color:"#7fd8c9", icon:"rainbow", img:null },
+    { title:"우리집 정원", medium:"물감", date:"2026.03", color:"#8bc86a", icon:"flower", img:null },
+    { title:"우리 집", medium:"크레파스", date:"2026.04", color:"#ff8a65", icon:"house", img:null },
+    { title:"바닷속 물고기", medium:"물감", date:"2026.04", color:"#5aa9e6", icon:"fish", img:null },
+    { title:"고양이 나비", medium:"색연필", date:"2026.05", color:"#d9a441", icon:"cat", img:null },
+    { title:"커다란 나무", medium:"크레파스", date:"2026.05", color:"#6fbf73", icon:"tree", img:null },
+    { title:"반짝이는 별", medium:"물감", date:"2026.06", color:"#ffd166", icon:"star", img:null },
+    { title:"엄마 아빠 사랑해", medium:"크레파스", date:"2026.06", color:"#ef9fc0", icon:"heart", img:null },
+    { title:"비 오는 날", medium:"색연필", date:"2026.07", color:"#8f9fd8", icon:"rain", img:null },
+    { title:"나비 친구", medium:"물감", date:"2026.07", color:"#b39ddb", icon:"butterfly", img:null },
+    { title:"풍선 타고", medium:"크레파스", date:"2026.08", color:"#ff8fa3", icon:"balloon", img:null },
+    { title:"바다 여행", medium:"물감", date:"2026.08", color:"#4fb6c4", icon:"boat", img:null },
+    { title:"공룡 친구", medium:"크레파스", date:"2026.08", color:"#a3c96a", icon:"dino", img:null },
+  ];
+
+  const PLACEHOLDER_ICONS = ["sun","rainbow","flower","house","fish","cat","tree","star","heart","rain","butterfly","balloon","boat","dino"];
+  const PLACEHOLDER_COLORS = ["#ff8a65","#7fd8c9","#ffd166","#b39ddb","#ef9fc0","#8bc86a","#5aa9e6","#d9a441"];
+
+  const ARTWORKS = (typeof ARTWORKS_DATA !== 'undefined' && ARTWORKS_DATA.length)
+    ? ARTWORKS_DATA.map((a,i)=>({
+        icon: PLACEHOLDER_ICONS[i % PLACEHOLDER_ICONS.length],
+        color: PLACEHOLDER_COLORS[i % PLACEHOLDER_COLORS.length],
+        ...a
+      }))
+    : DEFAULT_ARTWORKS;
+
+  /* ---------- hand-drawn icon paths ---------- */
+
+  function icon(name,color){
+    const s='stroke="'+color+'" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"';
+    const paths = {
+      sun:  '<circle cx="50" cy="50" r="17" fill="'+color+'" opacity="0.9"/>' +
+            '<g '+s+' opacity="0.85">' +
+            '<path d="M50 14v10"/><path d="M50 76v10"/><path d="M14 50h10"/><path d="M76 50h10"/>' +
+            '<path d="M24 24l7 7"/><path d="M69 69l7 7"/><path d="M76 24l-7 7"/><path d="M31 69l-7 7"/></g>',
+      rainbow: '<path d="M14 78a36 36 0 0 1 72 0" stroke="'+color+'" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+               '<path d="M25 78a25 25 0 0 1 50 0" stroke="#ffd166" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+               '<path d="M36 78a14 14 0 0 1 28 0" stroke="#ff8a65" stroke-width="7" fill="none" stroke-linecap="round"/>',
+      flower: '<g fill="'+color+'"><ellipse cx="50" cy="28" rx="11" ry="16"/><ellipse cx="50" cy="72" rx="11" ry="16"/>' +
+              '<ellipse cx="28" cy="50" rx="16" ry="11"/><ellipse cx="72" cy="50" rx="16" ry="11"/></g>' +
+              '<circle cx="50" cy="50" r="11" fill="#ffd166"/>' +
+              '<path d="M50 82v14" stroke="#6fbf73" stroke-width="6" stroke-linecap="round"/>',
+      house: '<path d="M18 52 50 22l32 30" '+s+'/>' +
+             '<path d="M26 48v34h48V48" fill="'+color+'" opacity="0.85"/>' +
+             '<rect x="45" y="60" width="14" height="22" fill="#5b4a3a"/>',
+      fish:  '<path d="M20 50c10-16 44-16 56 0-10 16-46 16-56 0Z" fill="'+color+'"/>' +
+             '<path d="M76 50l14-12v24Z" fill="'+color+'"/>' +
+             '<circle cx="32" cy="46" r="3" fill="#20242f"/>' +
+             '<path d="M14 30q10 8 12 20" '+s+' stroke-width="4" opacity="0.6"/>',
+      cat:   '<circle cx="50" cy="54" r="24" fill="'+color+'"/>' +
+             '<path d="M30 36 22 16l18 12Z" fill="'+color+'"/>' +
+             '<path d="M70 36 78 16 60 28Z" fill="'+color+'"/>' +
+             '<circle cx="41" cy="52" r="3" fill="#20242f"/><circle cx="59" cy="52" r="3" fill="#20242f"/>' +
+             '<g stroke="#20242f" stroke-width="2.5" stroke-linecap="round">' +
+             '<path d="M20 58h14M20 64h12M66 58h14M68 64h12"/></g>',
+      tree:  '<path d="M50 58v26" stroke="#8a5a3a" stroke-width="8" stroke-linecap="round"/>' +
+             '<circle cx="36" cy="38" r="18" fill="'+color+'"/><circle cx="60" cy="30" r="16" fill="'+color+'"/>' +
+             '<circle cx="66" cy="48" r="16" fill="'+color+'"/>',
+      star:  '<path d="M50 14 60 40 88 42 65 59 74 86 50 70 26 86 35 59 12 42 40 40Z" fill="'+color+'" stroke="'+color+'" stroke-width="4" stroke-linejoin="round"/>',
+      heart: '<path d="M50 84C18 62 12 40 26 28c10-9 22-4 24 8 2-12 14-17 24-8 14 12 8 34-24 56Z" fill="'+color+'"/>',
+      rain:  '<path d="M26 44a16 16 0 0 1 4-31 20 20 0 0 1 38-6 17 17 0 0 1 6 33Z" fill="#c9cfe6"/>' +
+             '<g stroke="'+color+'" stroke-width="5" stroke-linecap="round">' +
+             '<path d="M32 58v14M50 58v18M68 58v14"/></g>',
+      butterfly: '<path d="M50 30c-4-14-28-18-32-2-3 12 12 20 32 14Z" fill="'+color+'"/>' +
+                 '<path d="M50 30c4-14 28-18 32-2 3 12-12 20-32 14Z" fill="'+color+'"/>' +
+                 '<path d="M50 42c-3 12-24 18-30 6-4-9 8-16 30-6Z" fill="'+color+'" opacity="0.8"/>' +
+                 '<path d="M50 42c3 12 24 18 30 6 4-9-8-16-30-6Z" fill="'+color+'" opacity="0.8"/>' +
+                 '<path d="M50 24v40" stroke="#3a3226" stroke-width="4" stroke-linecap="round"/>',
+      balloon: '<ellipse cx="50" cy="38" rx="22" ry="26" fill="'+color+'"/>' +
+               '<path d="M50 64v6l-4 4 4 4-4 4 4 6" stroke="#5b6797" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+               '<path d="M46 64h8l-4 8Z" fill="'+color+'"/>',
+      boat:  '<path d="M16 62h68l-10 16H26Z" fill="'+color+'"/>' +
+             '<path d="M50 60V20" stroke="#5b4a3a" stroke-width="4" stroke-linecap="round"/>' +
+             '<path d="M52 22l24 20H52Z" fill="#fff" opacity="0.9"/>' +
+             '<path d="M48 26l-18 16h18Z" fill="#ffd166" opacity="0.9"/>',
+      dino:  '<path d="M18 78c0-18 4-30 14-36-4-8-2-16 4-20 3 5 4 9 4 13 4-2 9-3 13-2 1-6 6-11 11-12 1 5 0 9-2 13 8 3 13 10 14 19 5 1 9 5 9 10-3-1-6-1-8 1-1 6-6 10-13 11l2 13h-8l-1-12H44l-2 12h-8l1-13c-9-2-15-9-17-17Z" fill="'+color+'"/>' +
+             '<circle cx="63" cy="40" r="3" fill="#20242f"/>'
+    };
+    return '<svg viewBox="0 0 100 100" width="100%" height="100%">' + (paths[name]||paths.star) + '</svg>';
+  }
+
+  /* ---------- build graph ---------- */
+
+  const graph = document.getElementById('graph');
+  const nodesLayer = document.getElementById('nodes');
+  const linksSvg = document.getElementById('links');
+  const N = ARTWORKS.length;
+
+  function layout(){
+    nodesLayer.innerHTML = '';
+    linksSvg.innerHTML = '';
+
+    const w = graph.clientWidth, h = graph.clientHeight;
+    const cx = w/2, cy = h/2;
+    const baseR = Math.min(w,h) * 0.37;
+
+    // two staggered rings so cards never crowd their neighbors
+    const innerCount = 6;
+    const outerCount = N - innerCount;
+    const innerR = baseR * 0.62;
+    const outerR = baseR * 1.15;
+
+    const positions = [];
+    for(let i=0;i<innerCount;i++){
+      positions.push({
+        angle: (i/innerCount)*Math.PI*2 - Math.PI/2,
+        r: innerR
+      });
+    }
+    for(let i=0;i<outerCount;i++){
+      positions.push({
+        angle: (i/outerCount)*Math.PI*2 - Math.PI/2 + (Math.PI/outerCount),
+        r: outerR
+      });
+    }
+
+    const cardEls = [];
+
+    for(let i=0;i<N;i++){
+      const a = ARTWORKS[i];
+      const { angle, r } = positions[i];
+      const x = cx + Math.cos(angle)*r;
+      const y = cy + Math.sin(angle)*r;
+
+      // link line
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+      line.setAttribute('x2', x);  line.setAttribute('y2', y);
+      line.dataset.idx = i;
+      linksSvg.appendChild(line);
+
+      // node
+      const node = document.createElement('div');
+      node.className = 'node';
+      node.tabIndex = 0;
+      node.setAttribute('role','button');
+      node.setAttribute('aria-label', a.title + ' 크게 보기');
+      node.style.left = x+'px';
+      node.style.top = y+'px';
+      node.style.marginLeft = 'calc(clamp(70px,6.2vw,92px) / -2)';
+      node.style.marginTop = '-14px';
+
+      const rot = (((i*37) % 9) - 4);
+      const dx = (((i*53) % 12) - 6);
+      const dy = -(6 + (i*29)%10);
+      node.style.setProperty('--rot', rot+'deg');
+      node.style.setProperty('--dx', dx+'px');
+      node.style.setProperty('--dy', dy+'px');
+      node.style.animationDuration = (5 + (i%5)*0.7)+'s';
+      node.style.animationDelay = (-(i*0.6))+'s';
+
+      const artInner = a.img
+        ? '<img src="'+a.img+'" alt="'+a.title+'">'
+        : icon(a.icon, a.color);
+
+      node.innerHTML =
+        '<div class="pin"></div>' +
+        '<div class="card" style="transform:rotate('+rot+'deg)">' +
+          '<div class="art">'+artInner+'</div>' +
+          '<div class="title">'+a.title+'</div>' +
+        '</div>';
+
+      node.addEventListener('mouseenter', ()=> line.classList.add('hi'));
+      node.addEventListener('mouseleave', ()=> line.classList.remove('hi'));
+      node.addEventListener('click', ()=> openLightbox(a));
+      node.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openLightbox(a); }});
+
+      nodesLayer.appendChild(node);
+      cardEls.push(node);
+    }
+  }
+
+  layout();
+  window.addEventListener('resize', layout);
+
+  /* ---------- lightbox ---------- */
+
+  const lightbox = document.getElementById('lightbox');
+  const lbArt = document.getElementById('lightbox-art');
+  const lbTitle = document.getElementById('lightbox-title');
+  const lbMeta = document.getElementById('lightbox-meta');
+  const lbClose = document.getElementById('lightbox-close');
+
+  function openLightbox(a){
+    lbArt.innerHTML = a.img ? '<img src="'+a.img+'" alt="'+a.title+'">' : icon(a.icon, a.color);
+    lbTitle.textContent = a.title;
+    lbMeta.textContent = '박선율 · 6세 · ' + a.medium + ' · ' + a.date;
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden','false');
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden','true');
+  }
+  lbClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeLightbox(); });
+
+  /* ---------- twinkling stars ---------- */
+
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function initStars(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const count = Math.floor((canvas.width*canvas.height)/9000);
+    stars = Array.from({length:count}, ()=>({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*1.2 + 0.2,
+      p: Math.random()*Math.PI*2,
+      s: Math.random()*0.015 + 0.005
+    }));
+  }
+  function drawStars(t){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#ffffff';
+    for(const st of stars){
+      const tw = reduceMotion ? 0.5 : (Math.sin(st.p + t*st.s*60) * 0.5 + 0.5);
+      ctx.globalAlpha = 0.15 + tw*0.55;
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(drawStars);
+  }
+  initStars();
+  window.addEventListener('resize', initStars);
+  requestAnimationFrame(drawStars);
+
+})();
+</script>
