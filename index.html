@@ -52,10 +52,21 @@
     scroll-snap-stop:always;
   }
 
-  /* ---------- gallery section (holds the whole night graph view) ---------- */
+  /* ---------- gallery section (holds the 3D art journey / 2D graph fallback) ---------- */
 
   #gallery{
     position:relative;
+    width:100%;
+    background:var(--bg-0);
+  }
+
+  #gallery.mode-2d{ height:100vh; overflow:hidden; }
+  #gallery.mode-3d{ overflow:visible; }
+
+  #gallery-view{
+    position:sticky;
+    top:0;
+    left:0;
     width:100%;
     height:100vh;
     overflow:hidden;
@@ -72,14 +83,27 @@
       radial-gradient(ellipse 70% 55% at 50% 46%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
   }
 
-  #stars, #stars3d{
+  #stars{
     position:absolute;
     inset:0;
     z-index:1;
     pointer-events:none;
+    display:none;
   }
+  #gallery.mode-2d #stars{ display:block; }
 
-  /* ---------- stage ---------- */
+  /* ---------- 3D journey canvas ---------- */
+
+  #journey{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    display:none;
+    touch-action:pan-y;
+  }
+  #gallery.mode-3d #journey{ display:block; cursor:grab; }
+
+  /* ---------- stage (2D fallback graph) ---------- */
 
   #stage{
     position:absolute;
@@ -87,7 +111,9 @@
     z-index:2;
     overflow:auto;
     -webkit-overflow-scrolling:touch;
+    display:none;
   }
+  #gallery.mode-2d #stage{ display:block; }
 
   #graph{
     position:relative;
@@ -95,6 +121,16 @@
     min-width:1180px;
     height:100%;
     min-height:900px;
+  }
+
+  .sr-only{
+    position:absolute;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
   }
 
   /* ---------- center ---------- */
@@ -634,20 +670,24 @@
 </section>
 
 <section id="gallery">
-  <div id="sky"></div>
-  <canvas id="stars"></canvas>
-  <canvas id="stars3d"></canvas>
+  <div id="gallery-view">
+    <div id="sky"></div>
+    <canvas id="stars"></canvas>
+    <canvas id="journey"></canvas>
 
-  <div id="stage">
-    <div id="graph">
-      <svg id="links" width="100%" height="100%"></svg>
-      <div id="center"><span>6살</span></div>
-      <div id="caption">박선율 · 그림 그래프</div>
-      <div id="nodes"></div>
+    <div id="stage">
+      <div id="graph">
+        <svg id="links" width="100%" height="100%"></svg>
+        <div id="nodes"></div>
+      </div>
     </div>
-  </div>
 
-  <div id="hint">그림을 눌러 크게 보기</div>
+    <div id="center"><span>6살</span></div>
+    <div id="caption">박선율 · 그림 그래프</div>
+    <div id="hint">스크롤해서 그림 사이를 걸어보세요</div>
+
+    <div id="a11y-artworks" class="sr-only"></div>
+  </div>
 </section>
 
 <div id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
@@ -758,15 +798,42 @@
       dino:  '<path d="M18 78c0-18 4-30 14-36-4-8-2-16 4-20 3 5 4 9 4 13 4-2 9-3 13-2 1-6 6-11 11-12 1 5 0 9-2 13 8 3 13 10 14 19 5 1 9 5 9 10-3-1-6-1-8 1-1 6-6 10-13 11l2 13h-8l-1-12H44l-2 12h-8l1-13c-9-2-15-9-17-17Z" fill="'+color+'"/>' +
              '<circle cx="63" cy="40" r="3" fill="#20242f"/>'
     };
-    return '<svg viewBox="0 0 100 100" width="100%" height="100%">' + (paths[name]||paths.star) + '</svg>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">' + (paths[name]||paths.star) + '</svg>';
   }
 
-  /* ---------- build graph ---------- */
+  /* ---------- shared setup ---------- */
 
   const graph = document.getElementById('graph');
   const nodesLayer = document.getElementById('nodes');
   const linksSvg = document.getElementById('links');
   const N = ARTWORKS.length;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const galleryEl = document.getElementById('gallery');
+
+  /* ---------- lightbox (shared by both the 2D graph and the 3D journey) ---------- */
+
+  const lightbox = document.getElementById('lightbox');
+  const lbArt = document.getElementById('lightbox-art');
+  const lbTitle = document.getElementById('lightbox-title');
+  const lbMeta = document.getElementById('lightbox-meta');
+  const lbClose = document.getElementById('lightbox-close');
+
+  function openLightbox(a){
+    lbArt.innerHTML = a.img ? '<img src="'+a.img+'" alt="'+a.title+'">' : icon(a.icon, a.color);
+    lbTitle.textContent = a.title;
+    lbMeta.textContent = '박선율 · 6세 · ' + a.medium + ' · ' + a.date;
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden','false');
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden','true');
+  }
+  lbClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeLightbox(); });
+
+  /* ---------- 2D fallback graph (no WebGL, or reduced-motion) ---------- */
 
   function layout(){
     nodesLayer.innerHTML = '';
@@ -795,8 +862,6 @@
         r: outerR
       });
     }
-
-    const cardEls = [];
 
     for(let i=0;i<N;i++){
       const a = ARTWORKS[i];
@@ -848,145 +913,274 @@
       node.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openLightbox(a); }});
 
       nodesLayer.appendChild(node);
-      cardEls.push(node);
     }
   }
 
-  layout();
-  window.addEventListener('resize', layout);
+  /* ---------- twinkling stars (2D fallback backdrop) ---------- */
 
-  /* ---------- lightbox ---------- */
-
-  const lightbox = document.getElementById('lightbox');
-  const lbArt = document.getElementById('lightbox-art');
-  const lbTitle = document.getElementById('lightbox-title');
-  const lbMeta = document.getElementById('lightbox-meta');
-  const lbClose = document.getElementById('lightbox-close');
-
-  function openLightbox(a){
-    lbArt.innerHTML = a.img ? '<img src="'+a.img+'" alt="'+a.title+'">' : icon(a.icon, a.color);
-    lbTitle.textContent = a.title;
-    lbMeta.textContent = '박선율 · 6세 · ' + a.medium + ' · ' + a.date;
-    lightbox.classList.add('open');
-    lightbox.setAttribute('aria-hidden','false');
-  }
-  function closeLightbox(){
-    lightbox.classList.remove('open');
-    lightbox.setAttribute('aria-hidden','true');
-  }
-  lbClose.addEventListener('click', closeLightbox);
-  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox) closeLightbox(); });
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeLightbox(); });
-
-  /* ---------- twinkling stars ---------- */
-
-  const canvas = document.getElementById('stars');
-  const ctx = canvas.getContext('2d');
-  let stars = [];
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const starsCanvas = document.getElementById('stars');
+  const starsCtx = starsCanvas.getContext('2d');
+  let stars2d = [];
 
   function initStars(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const count = Math.floor((canvas.width*canvas.height)/9000);
-    stars = Array.from({length:count}, ()=>({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
+    starsCanvas.width = window.innerWidth;
+    starsCanvas.height = window.innerHeight;
+    const count = Math.floor((starsCanvas.width*starsCanvas.height)/9000);
+    stars2d = Array.from({length:count}, ()=>({
+      x: Math.random()*starsCanvas.width,
+      y: Math.random()*starsCanvas.height,
       r: Math.random()*1.2 + 0.2,
       p: Math.random()*Math.PI*2,
       s: Math.random()*0.015 + 0.005
     }));
   }
   function drawStars(t){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = '#ffffff';
-    for(const st of stars){
+    starsCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
+    starsCtx.fillStyle = '#ffffff';
+    for(const st of stars2d){
       const tw = reduceMotion ? 0.5 : (Math.sin(st.p + t*st.s*60) * 0.5 + 0.5);
-      ctx.globalAlpha = 0.15 + tw*0.55;
-      ctx.beginPath();
-      ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
-      ctx.fill();
+      starsCtx.globalAlpha = 0.15 + tw*0.55;
+      starsCtx.beginPath();
+      starsCtx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      starsCtx.fill();
     }
-    ctx.globalAlpha = 1;
+    starsCtx.globalAlpha = 1;
     requestAnimationFrame(drawStars);
   }
-  /* ---------- 3D starfield (Three.js), 2D canvas as fallback ---------- */
 
-  function initStarfield3D(){
-    const el = document.getElementById('stars3d');
-    const host = document.getElementById('gallery');
-    if (!el || !host || typeof THREE === 'undefined') return false;
+  /* ===================================================================
+     3D 그림 여행 (Three.js) — 스크롤하면 카메라가 그림들 사이를 지나가요.
+     WebGL을 못 쓰거나 "동작 최소화"를 켠 경우엔 기존 2D 그래프로 대신해요.
+     =================================================================== */
+
+  function initJourney(){
+    const canvasEl = document.getElementById('journey');
+    if (!canvasEl || typeof THREE === 'undefined') return false;
+
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas: el, alpha: true, antialias: true });
+      renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: false });
     } catch (e) { return false; }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0x080a14, 1);
+    if (renderer.outputEncoding !== undefined) renderer.outputEncoding = THREE.sRGBEncoding;
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(58, 1, 1, 2000);
-    camera.position.z = 480;
+    const SPACING = 210;
+    const totalDepth = (N + 1) * SPACING;
+    scene.fog = new THREE.Fog(0x080a14, 200, SPACING * 4);
 
-    const COUNT = 850;
-    const positions = new Float32Array(COUNT * 3);
-    for (let i = 0; i < COUNT; i++){
-      const r = 260 + Math.random() * 640;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos((Math.random() * 2) - 1);
-      positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-      positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.6;
-      positions[i*3+2] = r * Math.cos(phi) - 160;
+    const camera = new THREE.PerspectiveCamera(62, 1, 1, 4000);
+
+    /* ambient starfield shared with the journey scene */
+    const STAR_COUNT = 1000;
+    const starPos = new Float32Array(STAR_COUNT * 3);
+    for (let i = 0; i < STAR_COUNT; i++){
+      starPos[i*3]   = (Math.random()-0.5) * 900;
+      starPos[i*3+1] = (Math.random()-0.5) * 700;
+      starPos[i*3+2] = -Math.random() * (totalDepth + 600) + 200;
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const mat = new THREE.PointsMaterial({
-      size: 2.1,
-      sizeAttenuation: true,
-      color: 0xfff6da,
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({
+      size: 2.1, sizeAttenuation: true, color: 0xfff6da,
+      transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, fog: false
     });
-    const points = new THREE.Points(geo, mat);
-    scene.add(points);
+    scene.add(new THREE.Points(starGeo, starMat));
 
-    function resize(){
-      const w = host.clientWidth || window.innerWidth;
-      const h = host.clientHeight || window.innerHeight;
+    /* artwork frames placed along the path, alternating left / right */
+    const textureLoader = new THREE.TextureLoader();
+    const raycastTargets = [];
+    const meshToArtwork = new Map();
+    const groups = [];
+
+    function svgTexture(a){
+      const cvs = document.createElement('canvas');
+      cvs.width = 256; cvs.height = 256;
+      const cx2 = cvs.getContext('2d');
+      cx2.fillStyle = '#faf3e3';
+      cx2.fillRect(0,0,256,256);
+      const tex = new THREE.CanvasTexture(cvs);
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        cx2.drawImage(imgEl, 16, 16, 224, 224);
+        tex.needsUpdate = true;
+      };
+      imgEl.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(icon(a.icon, a.color))));
+      return tex;
+    }
+
+    function captionTexture(text){
+      const cvs = document.createElement('canvas');
+      cvs.width = 512; cvs.height = 128;
+      const cx2 = cvs.getContext('2d');
+      cx2.font = '600 46px "Gaegu", "Noto Sans KR", sans-serif';
+      cx2.textAlign = 'center';
+      cx2.textBaseline = 'middle';
+      cx2.shadowColor = 'rgba(0,0,0,0.65)';
+      cx2.shadowBlur = 10;
+      cx2.fillStyle = '#f7f5ef';
+      cx2.fillText(text, 256, 64);
+      return new THREE.CanvasTexture(cvs);
+    }
+
+    for (let i = 0; i < N; i++){
+      const a = ARTWORKS[i];
+      const side = (i % 2 === 0) ? -1 : 1;
+      const x = side * (58 + (i % 3) * 6);
+      const y = 6 + Math.sin(i * 1.3) * 10;
+      const z = -(i + 1) * SPACING;
+
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.userData.baseY = y;
+
+      const frame = new THREE.Mesh(
+        new THREE.PlaneGeometry(54, 54),
+        new THREE.MeshBasicMaterial({ color: 0xfaf3e3, fog: true })
+      );
+      frame.position.z = -0.6;
+      group.add(frame);
+
+      const artTex = a.img ? textureLoader.load(a.img) : svgTexture(a);
+      if (a.img && artTex.encoding !== undefined) artTex.encoding = THREE.sRGBEncoding;
+      const artMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(46, 46),
+        new THREE.MeshBasicMaterial({ map: artTex, fog: true })
+      );
+      artMesh.userData.artworkIndex = i;
+      group.add(artMesh);
+      raycastTargets.push(artMesh);
+      meshToArtwork.set(artMesh, a);
+
+      const capTex = captionTexture(a.title);
+      const capSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: capTex, transparent: true, depthTest: false, fog: true }));
+      capSprite.scale.set(46, 11.5, 1);
+      capSprite.position.set(0, -34, 0.3);
+      group.add(capSprite);
+
+      scene.add(group);
+      groups.push(group);
+    }
+
+    /* accessible fallback: every artwork stays reachable for keyboard / screen-reader users */
+    const a11yList = document.getElementById('a11y-artworks');
+    if (a11yList) {
+      a11yList.innerHTML = '';
+      ARTWORKS.forEach((a) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = a.title + ' 크게 보기';
+        btn.addEventListener('click', () => openLightbox(a));
+        a11yList.appendChild(btn);
+      });
+    }
+
+    /* sizing: the section grows tall so scrolling has room to drive the camera */
+    const viewEl = document.getElementById('gallery-view');
+
+    function sizeRenderer(){
+      const w = viewEl.clientWidth || window.innerWidth;
+      const h = viewEl.clientHeight || window.innerHeight;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
-    resize();
-    window.addEventListener('resize', resize);
 
-    let mouseX = 0, mouseY = 0;
-    if (!reduceMotion) {
-      window.addEventListener('mousemove', (e) => {
-        mouseX = (e.clientX / window.innerWidth - 0.5);
-        mouseY = (e.clientY / window.innerHeight - 0.5);
-      });
+    const perItemVh = N > 12 ? 34 : 46;
+    galleryEl.style.height = (N * perItemVh + 100) + 'vh';
+    sizeRenderer();
+    window.addEventListener('resize', sizeRenderer);
+
+    /* scroll-driven camera flythrough */
+    function getProgress(){
+      const rect = galleryEl.getBoundingClientRect();
+      const total = galleryEl.offsetHeight - window.innerHeight;
+      if (total <= 0) return 0;
+      return Math.min(1, Math.max(0, -rect.top / total));
     }
 
-    const spin = reduceMotion ? 0 : 0.00032;
+    function updateCamera(p){
+      const z = -p * totalDepth;
+      camera.position.z = z;
+      camera.position.x = reduceMotion ? 0 : Math.sin(p * Math.PI * 4) * 16;
+      camera.position.y = 8 + (reduceMotion ? 0 : Math.sin(p * Math.PI * 6) * 3);
+      camera.lookAt(camera.position.x * 0.4, camera.position.y * 0.7, z - 90);
+    }
+
+    let scrollTicking = false;
+    function onJourneyScroll(){
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        updateCamera(getProgress());
+        scrollTicking = false;
+      });
+    }
+    window.addEventListener('scroll', onJourneyScroll, { passive: true });
+    updateCamera(0);
+
+    /* click / hover interaction */
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function pickAt(clientX, clientY){
+      const rect = canvasEl.getBoundingClientRect();
+      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(raycastTargets);
+      return hits.length ? meshToArtwork.get(hits[0].object) : null;
+    }
+
+    canvasEl.addEventListener('click', (e) => {
+      const a = pickAt(e.clientX, e.clientY);
+      if (a) openLightbox(a);
+    });
+
+    let hoverTicking = false;
+    canvasEl.addEventListener('mousemove', (e) => {
+      if (hoverTicking) return;
+      hoverTicking = true;
+      requestAnimationFrame(() => {
+        const a = pickAt(e.clientX, e.clientY);
+        canvasEl.style.cursor = a ? 'pointer' : 'grab';
+        hoverTicking = false;
+      });
+    });
+
+    /* render loop */
+    const clock = new THREE.Clock();
     function animate(){
       requestAnimationFrame(animate);
-      points.rotation.y += spin;
-      points.rotation.x += spin * 0.35;
-      camera.position.x += (mouseX * 36 - camera.position.x) * 0.02;
-      camera.position.y += (-mouseY * 26 - camera.position.y) * 0.02;
-      camera.lookAt(scene.position);
+      const t = clock.getElapsedTime();
+      if (!reduceMotion) {
+        groups.forEach((g, i) => {
+          g.position.y = g.userData.baseY + Math.sin(t * 0.6 + i * 1.7) * 3;
+          g.rotation.z = Math.sin(t * 0.4 + i * 1.3) * 0.03;
+        });
+      }
       renderer.render(scene, camera);
     }
     animate();
+
     return true;
   }
 
-  const stars3dReady = initStarfield3D();
-  if (stars3dReady) {
-    canvas.style.display = 'none';
+  /* ---------- pick a mode and boot the gallery ---------- */
+
+  const journeyOk = !reduceMotion && initJourney();
+  const hintEl = document.getElementById('hint');
+
+  if (journeyOk) {
+    galleryEl.classList.add('mode-3d');
+    if (hintEl) hintEl.textContent = '스크롤해서 그림 사이를 걸어보세요';
   } else {
+    galleryEl.classList.add('mode-2d');
+    if (hintEl) hintEl.textContent = '그림을 눌러 크게 보기';
+    layout();
+    window.addEventListener('resize', layout);
     initStars();
     window.addEventListener('resize', initStars);
     requestAnimationFrame(drawStars);
@@ -995,10 +1189,9 @@
   /* ---------- intro scroll button ---------- */
 
   const scrollCta = document.getElementById('scroll-cta');
-  const gallerySection = document.getElementById('gallery');
-  if (scrollCta && gallerySection) {
+  if (scrollCta && galleryEl) {
     scrollCta.addEventListener('click', () => {
-      gallerySection.scrollIntoView({ behavior: 'smooth' });
+      galleryEl.scrollIntoView({ behavior: 'smooth' });
     });
   }
 
@@ -1033,6 +1226,11 @@
       .from('#center', { scale: 0.5, opacity: 0, duration: 0.9, ease: 'back.out(1.6)' })
       .from('#caption', { opacity: 0, y: 10, duration: 0.5 }, '-=0.4')
       .from('#hint', { opacity: 0, duration: 0.5 }, '-=0.3');
+
+      gsap.timeline({
+        scrollTrigger: { trigger: '#gallery', start: 'top top', end: '+=30%', scrub: true }
+      })
+      .to(['#center', '#caption', '#hint'], { opacity: 0, y: -16, duration: 1, ease: 'none' });
     }
   }
 
