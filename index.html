@@ -308,8 +308,14 @@
   .about-portrait{
     aspect-ratio: 1/1;
     border-radius: 28px;
+    overflow:hidden;
     background: radial-gradient(circle at 30% 30%, #ffe0b3, #ff8fa3 55%, #4d7bf0 100%);
     box-shadow: var(--shadow-soft);
+  }
+  .about-portrait img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
   }
   .about-copy h2{ font-size: clamp(26px,2.8vw,36px); font-weight:600; letter-spacing: var(--tracking-tight); margin-bottom:20px; }
   .about-copy p{ font-size:17px; line-height:1.7; color: var(--ink-soft); max-width: 50ch; }
@@ -473,7 +479,7 @@
 </section>
 
 <section class="about" id="about">
-  <div class="about-portrait"></div>
+  <div class="about-portrait"><img src="about-portrait.jpg" alt="선율이와 동생"></div>
   <div class="about-copy">
     <h2>선율이를 소개해요</h2>
     <p>선율이는 색을 고르는 데 가장 오랜 시간을 씁니다. 하늘색 하나를 정하기 위해 물감 세 개를 섞어보는 아이예요. 완성된 그림보다 그리는 과정을 더 좋아합니다.</p>
