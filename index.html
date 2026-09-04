@@ -319,6 +319,36 @@
   .cta h2{ font-size: clamp(30px,4.2vw,52px); font-weight:600; letter-spacing: var(--tracking-tight); max-width: 16ch; margin: 0 auto 18px; }
   .cta p{ color: var(--grey); font-size:16px; max-width: 40ch; margin: 0 auto 30px; }
 
+  .link-cards{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 720px;
+    margin: 0 auto;
+    text-align:left;
+  }
+  .link-card{
+    position:relative;
+    display:block;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 26px 26px 24px;
+    transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease, border-color .3s ease;
+  }
+  .link-card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-soft); border-color: transparent; }
+  .link-card .lc-title{ font-size:17px; font-weight:600; padding-right: 26px; }
+  .link-card .lc-sub{ margin-top:8px; font-size:14px; color: var(--grey); }
+  .link-card .lc-arrow{
+    position:absolute; top:24px; right:24px;
+    font-size:18px; color: var(--accent);
+    transition: transform .2s ease;
+  }
+  .link-card:hover .lc-arrow{ transform: translate(3px,-3px); }
+  @media (max-width: 560px){
+    .link-cards{ grid-template-columns: 1fr; }
+  }
+
   footer{
     border-top:1px solid var(--line);
     padding: 28px 24px;
@@ -452,9 +482,20 @@
 </section>
 
 <section class="cta" id="visit">
-  <h2>새 작품이 궁금하다면</h2>
-  <p>선율이는 새로운 그림을 그릴 때마다 이곳에 올립니다. 언제든 다시 들러 최신 작품을 확인해 보세요.</p>
-  <a class="btn-primary" href="#gallery">최신 작품 보기</a>
+  <h2>더 만나보세요</h2>
+  <p>선율이 곁의 이야기를 조금 더 담았어요.</p>
+  <div class="link-cards">
+    <a class="link-card" href="https://julyjunghoon.github.io/our-kids-site/" target="_blank" rel="noopener">
+      <div class="lc-title">선율이 가족들의 이야기</div>
+      <div class="lc-sub">박선율 가족들 만나기</div>
+      <span class="lc-arrow">↗</span>
+    </a>
+    <a class="link-card" href="https://julyjunghoon.github.io/siyul-art-graph/#gallery" target="_blank" rel="noopener">
+      <div class="lc-title">시율이의 온라인 미술관</div>
+      <div class="lc-sub">동생 박시율의 작품 보기</div>
+      <span class="lc-arrow">↗</span>
+    </a>
+  </div>
 </section>
 
 <footer>
