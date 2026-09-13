@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선율이의 온라인 미술관</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAFAF8;
+    --surface: #F3F3F1;
+    --ink: #1D1D1F;
+    --ink-soft: #4A4A4D;
+    --grey: #86868B;
+    --accent: #3A6FF0;
+    --accent-soft: #EAF0FF;
+    --line: #E6E6E3;
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --serif-space: -0.02em;
+  }
+  *{ box-sizing: border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family: 'Inter','Noto Sans KR',sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x:hidden;
+  }
+  a{ color:inherit; text-decoration:none; }
+  img{ display:block; max-width:100%; }
+
+  /* ---------- Nav ---------- */
+  header.nav{
+    position: sticky;
+    top:0;
+    z-index: 50;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 20px 6vw;
+    background: rgba(250,250,248,0.82);
+    backdrop-filter: blur(16px) saturate(160%);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-logo{ font-weight:700; font-size:17px; letter-spacing:var(--serif-space); }
+  .nav-links{ display:flex; gap:32px; font-size:14px; color:var(--ink-soft); }
+  .nav-links a:hover{ color:var(--ink); }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding: 8vw 6vw 6vw;
+    display:grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 5vw;
+    align-items:center;
+    min-height: 86vh;
+  }
+  .hero-copy{
+    opacity:0;
+    transform: translateY(18px);
+    animation: rise 0.9s cubic-bezier(.2,.7,.2,1) 0.15s forwards;
+  }
+  .hero-eyebrow-line{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+    color: var(--accent);
+    font-weight:600;
+    margin-bottom: 22px;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+  .hero h1{
+    font-size: clamp(38px, 4.6vw, 64px);
+    line-height:1.12;
+    font-weight:800;
+    letter-spacing: var(--serif-space);
+    max-width: 12ch;
+  }
+  .hero p.lead{
+    margin-top: 22px;
+    font-size: 18px;
+    line-height:1.65;
+    color: var(--ink-soft);
+    max-width: 46ch;
+  }
+  .hero-actions{ display:flex; gap:14px; margin-top:36px; }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    padding: 13px 26px;
+    border-radius: 100px;
+    font-size:15px;
+    font-weight:600;
+    transition: transform .25s ease, background .25s ease;
+  }
+  .btn-primary{ background: var(--ink); color:#fff; }
+  .btn-primary:hover{ transform: translateY(-2px); background:#000; }
+  .btn-secondary{ background: transparent; color: var(--ink); border:1px solid var(--line); }
+  .btn-secondary:hover{ transform: translateY(-2px); border-color: var(--ink); }
+
+  .hero-art{
+    position:relative;
+    opacity:0;
+    transform: scale(0.94);
+    animation: pop 1s cubic-bezier(.2,.7,.2,1) 0.05s forwards;
+  }
+  .hero-art .frame{
+    border-radius: var(--radius-lg);
+    overflow:hidden;
+    aspect-ratio: 4/5;
+    background: linear-gradient(135deg,#FFD9B3 0%, #FF9E7D 28%, #3A6FF0 62%, #1D3FA8 100%);
+    position:relative;
+    box-shadow: 0 40px 80px -30px rgba(29,29,31,0.35);
+  }
+  .hero-art .frame::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 45%);
+    mix-blend-mode: overlay;
+  }
+  .hero-art .caption{
+    margin-top:16px;
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color: var(--grey);
+  }
+  .hero-art .caption strong{ color: var(--ink-soft); font-weight:600; }
+
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+  @keyframes pop{ to{ opacity:1; transform:scale(1); } }
+
+  /* ---------- Intro strip ---------- */
+  .intro-strip{
+    padding: 0 6vw 6vw;
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 64px;
+  }
+  .intro-strip .stat h3{
+    font-size: 34px;
+    font-weight:800;
+    letter-spacing: var(--serif-space);
+  }
+  .intro-strip .stat p{
+    margin-top:8px;
+    font-size:14px;
+    color: var(--grey);
+  }
+
+  /* ---------- Gallery ---------- */
+  .section{ padding: 7vw 6vw; }
+  .section-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom: 44px;
+    gap: 24px;
+  }
+  .section-head h2{
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight:800;
+    letter-spacing: var(--serif-space);
+    max-width: 16ch;
+  }
+  .section-head p{
+    color: var(--grey);
+    font-size:15px;
+    max-width: 34ch;
+    line-height:1.6;
+  }
+
+  .gallery-grid{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 14vw;
+    gap: 18px;
+  }
+  .art-card{
+    position:relative;
+    border-radius: var(--radius-md);
+    overflow:hidden;
+    cursor: default;
+    background: var(--surface);
+  }
+  .art-card .swatch{
+    position:absolute; inset:0;
+  }
+  .art-card .meta{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    padding: 18px;
+    background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 65%);
+    color:#fff;
+    opacity:0;
+    transform: translateY(8px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .art-card:hover .meta{ opacity:1; transform:translateY(0); }
+  .art-card .meta .title{ font-weight:700; font-size:15px; }
+  .art-card .meta .sub{ font-size:12px; opacity:.85; margin-top:2px; }
+
+  .g1{ grid-column: span 3; grid-row: span 2; }
+  .g2{ grid-column: span 3; grid-row: span 1; }
+  .g3{ grid-column: span 3; grid-row: span 1; }
+  .g4{ grid-column: span 2; grid-row: span 2; }
+  .g5{ grid-column: span 2; grid-row: span 2; }
+  .g6{ grid-column: span 2; grid-row: span 2; }
+
+  .swatch-1{ background: linear-gradient(140deg,#FFB88C,#FF6F91 60%,#3A6FF0); }
+  .swatch-2{ background: linear-gradient(140deg,#8FD3FE,#3A6FF0); }
+  .swatch-3{ background: linear-gradient(140deg,#FFE39A,#FF9E7D); }
+  .swatch-4{ background: linear-gradient(140deg,#B7F0C1,#3AC6A6); }
+  .swatch-5{ background: linear-gradient(140deg,#D9C7FF,#7A5AF8); }
+  .swatch-6{ background: linear-gradient(140deg,#FFC9DE,#F45C9C); }
+
+  /* ---------- About ---------- */
+  .about{
+    display:grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 6vw;
+    align-items:center;
+    padding: 7vw 6vw;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    margin: 0 6vw;
+  }
+  .about-portrait{
+    aspect-ratio: 1/1;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at 30% 30%, #FFE0B3, #FF8FA3 55%, #3A6FF0 100%);
+  }
+  .about-copy h2{
+    font-size: clamp(26px,2.8vw,36px);
+    font-weight:800;
+    letter-spacing: var(--serif-space);
+    margin-bottom:20px;
+  }
+  .about-copy p{
+    font-size:16px;
+    line-height:1.75;
+    color: var(--ink-soft);
+    max-width: 52ch;
+  }
+  .about-copy p + p{ margin-top:14px; }
+
+  /* ---------- Visit / CTA ---------- */
+  .cta{
+    text-align:center;
+    padding: 10vw 6vw;
+  }
+  .cta h2{
+    font-size: clamp(30px,4vw,52px);
+    font-weight:800;
+    letter-spacing: var(--serif-space);
+    max-width: 16ch;
+    margin: 0 auto 20px;
+  }
+  .cta p{
+    color: var(--grey);
+    font-size:16px;
+    max-width: 42ch;
+    margin: 0 auto 32px;
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding: 32px 6vw;
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color: var(--grey);
+  }
+
+  @media (max-width: 860px){
+    .hero{ grid-template-columns:1fr; padding-top: 14vw; }
+    .intro-strip{ grid-template-columns:1fr; gap:20px; }
+    .gallery-grid{ grid-template-columns: repeat(2,1fr); grid-auto-rows: 46vw; }
+    .g1,.g2,.g3,.g4,.g5,.g6{ grid-column: span 2; grid-row: span 1; }
+    .about{ grid-template-columns:1fr; }
+    .nav-links{ display:none; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .hero-copy, .hero-art{ animation: none; opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav-logo">선율의 미술관</div>
+    <nav class="nav-links">
+      <a href="#gallery">작품</a>
+      <a href="#about">선율 이야기</a>
+      <a href="#visit">방문 안내</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="hero-eyebrow-line"><span class="dot"></span>온라인 미술관</div>
+      <h1>선율이가 그린<br>작은 세계</h1>
+      <p class="lead">여섯 살 선율이가 크레파스와 물감으로 담아낸 순간들을 모았습니다. 한 장 한 장, 아이가 세상을 보는 방식을 따라가 보세요.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#gallery">작품 둘러보기</a>
+        <a class="btn btn-secondary" href="#about">선율이 이야기</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="frame"></div>
+      <div class="caption"><span><strong>대표작</strong> · 여섯 살, 크레파스</span><span>2026</span></div>
+    </div>
+  </section>
+
+  <div class="intro-strip">
+    <div class="stat">
+      <h3>32</h3>
+      <p>지금까지 전시된 작품 수</p>
+    </div>
+    <div class="stat">
+      <h3>6</h3>
+      <p>선율이의 현재 나이</p>
+    </div>
+    <div class="stat">
+      <h3>4</h3>
+      <p>즐겨 쓰는 재료 — 크레파스, 수채화, 색연필, 콜라주</p>
+    </div>
+  </div>
+
+  <section class="section" id="gallery">
+    <div class="section-head">
+      <h2>최근 작품들</h2>
+      <p>선율이가 요즘 가장 좋아하는 주제는 바다와 우리 가족이에요. 마우스를 올리면 제목을 볼 수 있어요.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="art-card g1"><div class="swatch swatch-1"></div><div class="meta"><div class="title">우리 가족 소풍</div><div class="sub">크레파스 · 2026.08</div></div></div>
+      <div class="art-card g2"><div class="swatch swatch-2"></div><div class="meta"><div class="title">깊은 바다</div><div class="sub">수채화 · 2026.07</div></div></div>
+      <div class="art-card g3"><div class="swatch swatch-3"></div><div class="meta"><div class="title">해질녘 놀이터</div><div class="sub">색연필 · 2026.07</div></div></div>
+      <div class="art-card g4"><div class="swatch swatch-4"></div><div class="meta"><div class="title">우리 집 마당</div><div class="sub">콜라주 · 2026.06</div></div></div>
+      <div class="art-card g5"><div class="swatch swatch-5"></div><div class="meta"><div class="title">별이 빛나는 밤</div><div class="sub">크레파스 · 2026.06</div></div></div>
+      <div class="art-card g6"><div class="swatch swatch-6"></div><div class="meta"><div class="title">봄날의 강아지</div><div class="sub">수채화 · 2026.05</div></div></div>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <div class="about-portrait"></div>
+    <div class="about-copy">
+      <h2>선율이를 소개해요</h2>
+      <p>선율이는 색을 고르는 데 가장 오랜 시간을 씁니다. 하늘색 하나를 정하기 위해 물감 세 개를 섞어보는 아이예요. 완성된 그림보다 그리는 과정을 더 좋아합니다.</p>
+      <p>이 미술관은 선율이가 그린 그림을 가족과 친구들에게 보여주고, 시간이 지나며 달라지는 아이의 시선을 기록하기 위해 만들었습니다.</p>
+    </div>
+  </section>
+
+  <section class="cta" id="visit">
+    <h2>새 작품이 궁금하다면</h2>
+    <p>선율이는 매달 새로운 그림을 그려 이곳에 올립니다. 다음 전시 소식을 가장 먼저 받아보세요.</p>
+    <a class="btn btn-primary" href="#gallery">최신 작품 보기</a>
+  </section>
+
+  <footer>
+    <span>© 2026 선율의 미술관</span>
+    <span>선율이와 함께 만든 작은 공간</span>
+  </footer>
+
+</body>
+</html>

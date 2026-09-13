@@ -1,0 +1,560 @@
+<title>선율의 미술관</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --mat: #fbfbfa;
+    --ink: #1d1d1f;
+    --ink-soft: #424245;
+    --grey: #86868b;
+    --accent: #0068d6;
+    --accent-hover: #0058b3;
+    --line: rgba(0,0,0,0.08);
+    --line-strong: rgba(0,0,0,0.14);
+    --shadow: 0 30px 60px -30px rgba(0,0,0,0.22);
+    --shadow-soft: 0 12px 30px -16px rgba(0,0,0,0.18);
+    --scrim: rgba(0,0,0,0.5);
+    --tracking-tight: -0.022em;
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #000000;
+      --surface: #1c1c1e;
+      --mat: #232325;
+      --ink: #f5f5f7;
+      --ink-soft: #d2d2d7;
+      --grey: #98989d;
+      --accent: #2997ff;
+      --accent-hover: #6cb6ff;
+      --line: rgba(255,255,255,0.12);
+      --line-strong: rgba(255,255,255,0.18);
+      --shadow: 0 30px 60px -30px rgba(0,0,0,0.6);
+      --shadow-soft: 0 12px 30px -16px rgba(0,0,0,0.5);
+      --scrim: rgba(0,0,0,0.72);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --mat: #232325;
+    --ink: #f5f5f7;
+    --ink-soft: #d2d2d7;
+    --grey: #98989d;
+    --accent: #2997ff;
+    --accent-hover: #6cb6ff;
+    --line: rgba(255,255,255,0.12);
+    --line-strong: rgba(255,255,255,0.18);
+    --shadow: 0 30px 60px -30px rgba(0,0,0,0.6);
+    --shadow-soft: 0 12px 30px -16px rgba(0,0,0,0.5);
+    --scrim: rgba(0,0,0,0.72);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Apple SD Gothic Neo", "Noto Sans KR", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  a{ color:inherit; text-decoration:none; }
+  img{ display:block; max-width:100%; }
+  button{ font: inherit; color: inherit; }
+  h1,h2,h3{ text-wrap: balance; }
+  .num{ font-variant-numeric: tabular-nums; }
+
+  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  .wrap{ max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Nav ---------- */
+  header.nav{
+    position: sticky; top:0; z-index: 60;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 15px 24px;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-logo{ font-weight:600; font-size:14px; letter-spacing:-0.01em; }
+  .nav-links{ display:flex; gap:34px; font-size:12px; color: var(--ink-soft); }
+  .nav-links a{ transition: color .2s ease; }
+  .nav-links a:hover{ color: var(--accent); }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding: 96px 24px 0;
+    text-align: center;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:14px; font-weight:600; color: var(--accent);
+    margin-bottom: 20px;
+    opacity:0; transform: translateY(10px);
+    animation: rise .7s cubic-bezier(.2,.7,.2,1) .05s forwards;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background: var(--accent); }
+  .hero h1{
+    font-size: clamp(40px, 7vw, 84px);
+    line-height:1.08;
+    font-weight:600;
+    letter-spacing: var(--tracking-tight);
+    max-width: 14ch;
+    opacity:0; transform: translateY(14px);
+    animation: rise .8s cubic-bezier(.2,.7,.2,1) .12s forwards;
+  }
+  .hero p.lead{
+    margin-top: 22px;
+    font-size: clamp(17px, 1.6vw, 21px);
+    line-height:1.6;
+    color: var(--ink-soft);
+    max-width: 38ch;
+    opacity:0; transform: translateY(14px);
+    animation: rise .8s cubic-bezier(.2,.7,.2,1) .2s forwards;
+  }
+  .hero-actions{
+    display:flex; gap:20px; align-items:center; margin-top:34px;
+    opacity:0; transform: translateY(14px);
+    animation: rise .8s cubic-bezier(.2,.7,.2,1) .28s forwards;
+  }
+  .btn-primary{
+    display:inline-flex; align-items:center;
+    padding: 12px 26px;
+    border-radius: 100px;
+    font-size:15px; font-weight:500;
+    background: var(--accent); color:#fff;
+    border: none; cursor: pointer;
+    transition: background .2s ease;
+  }
+  .btn-primary:hover{ background: var(--accent-hover); }
+  .btn-text{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:15px; font-weight:500; color: var(--accent);
+  }
+  .btn-text .chev{ transition: transform .2s ease; }
+  .btn-text:hover .chev{ transform: translateX(3px); }
+
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+
+  /* full-bleed hero banner */
+  .hero-banner{
+    width:100%; max-width: 1180px;
+    margin: 56px auto 0;
+    padding: 0 24px;
+    opacity:0; transform: scale(.97);
+    animation: pop 1s cubic-bezier(.2,.7,.2,1) .3s forwards;
+  }
+  .hero-frame{
+    position:relative;
+    border-radius: 36px;
+    overflow:hidden;
+    aspect-ratio: 16/8;
+    background:
+      radial-gradient(circle at 22% 25%, rgba(255,255,255,.5), transparent 40%),
+      linear-gradient(120deg, #ffb37a 0%, #ff7d97 32%, #5b8def 68%, #1d3fa8 100%);
+    box-shadow: var(--shadow);
+  }
+  .hero-frame .frame-caption{
+    position:absolute; left:28px; right:28px; bottom:22px;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    color:#fff; font-size:13px;
+  }
+  .hero-frame .frame-caption strong{ display:block; font-size:16px; font-weight:600; margin-bottom:2px; }
+  .hero-frame .frame-caption span.year{ font-variant-numeric: tabular-nums; opacity:.85; }
+  @keyframes pop{ to{ opacity:1; transform:scale(1); } }
+
+  /* ---------- Stats ---------- */
+  .stats{
+    max-width: 1180px; margin: 0 auto;
+    padding: 88px 24px 84px;
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align:center;
+  }
+  .stats .stat{
+    padding: 0 24px;
+    border-left: 1px solid var(--line);
+  }
+  .stats .stat:first-child{ border-left: none; }
+  .stats .stat h3{
+    font-size: 40px; font-weight:600; letter-spacing: var(--tracking-tight);
+  }
+  .stats .stat p{
+    margin-top:10px; font-size:14px; line-height:1.5; color: var(--grey);
+  }
+  .media-legend{
+    display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:12px;
+  }
+  .media-legend span{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; color: var(--ink-soft);
+  }
+  .swatch-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+
+  /* ---------- Section shell ---------- */
+  .section{ max-width: 1180px; margin: 0 auto; padding: 84px 24px; }
+  .section-head{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-bottom: 40px; gap: 24px; flex-wrap: wrap;
+  }
+  .section-head h2{
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight:600; letter-spacing: var(--tracking-tight);
+  }
+  .section-head p{
+    color: var(--grey); font-size:15px; max-width: 36ch; line-height:1.6;
+  }
+  .see-all{ font-size:14px; font-weight:500; color: var(--accent); white-space:nowrap; }
+
+  /* ---------- Gallery ---------- */
+  .gallery-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .art-card{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 14px 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease, border-color .35s ease;
+    opacity: 0; transform: translateY(18px);
+  }
+  .art-card.in-view{ opacity:1; transform: translateY(0); }
+  .art-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-soft); border-color: transparent; }
+  .art-card .mat{
+    border-radius: 16px;
+    padding: 14px;
+    background: var(--mat);
+  }
+  .art-card .swatch{
+    aspect-ratio: 4/5;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    transition: transform .5s cubic-bezier(.2,.7,.2,1);
+  }
+  .art-card:hover .swatch{ transform: scale(1.015); }
+  .art-card .info{ padding: 16px 6px 4px; }
+  .art-card .title{ font-size:15px; font-weight:600; }
+  .art-card .sub{
+    margin-top:6px; display:flex; align-items:center; gap:7px;
+    font-size:13px; color: var(--grey);
+  }
+
+  .swatch-1{ background: linear-gradient(140deg,#ffb37a,#ff6f91 60%,#4d7bf0); }
+  .swatch-2{ background: linear-gradient(140deg,#8fd3fe,#3a6ff0); }
+  .swatch-3{ background: linear-gradient(140deg,#ffe39a,#ff9e7d); }
+  .swatch-4{ background: linear-gradient(140deg,#b7f0c1,#3ac6a6); }
+  .swatch-5{ background: linear-gradient(140deg,#d9c7ff,#7a5af8); }
+  .swatch-6{ background: linear-gradient(140deg,#ffc9de,#f45c9c); }
+
+  .medium-crayon{ background:#ff7d47; }
+  .medium-watercolor{ background:#3a8ff0; }
+  .medium-pencil{ background:#f0b23a; }
+  .medium-collage{ background:#7a5af8; }
+
+  /* ---------- About ---------- */
+  .about{
+    display:grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 6vw;
+    align-items:center;
+    padding: 6vw;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 40px;
+    margin: 0 24px;
+    max-width: 1180px;
+    margin-inline: auto;
+  }
+  .about-portrait{
+    aspect-ratio: 1/1;
+    border-radius: 28px;
+    background: radial-gradient(circle at 30% 30%, #ffe0b3, #ff8fa3 55%, #4d7bf0 100%);
+    box-shadow: var(--shadow-soft);
+  }
+  .about-copy h2{
+    font-size: clamp(26px,2.8vw,36px);
+    font-weight:600; letter-spacing: var(--tracking-tight);
+    margin-bottom:20px;
+  }
+  .about-copy p{
+    font-size:17px; line-height:1.7; color: var(--ink-soft); max-width: 50ch;
+  }
+  .about-copy p + p{ margin-top:14px; }
+
+  /* ---------- CTA ---------- */
+  .cta{ text-align:center; padding: 120px 24px 130px; }
+  .cta h2{
+    font-size: clamp(30px,4.2vw,52px);
+    font-weight:600; letter-spacing: var(--tracking-tight);
+    max-width: 16ch; margin: 0 auto 18px;
+  }
+  .cta p{ color: var(--grey); font-size:16px; max-width: 40ch; margin: 0 auto 30px; }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding: 28px 24px;
+    max-width: 1180px; margin: 0 auto;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    font-size:12px; color: var(--grey);
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-scrim{
+    position: fixed; inset:0; z-index: 100;
+    background: var(--scrim);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    padding: 32px;
+    opacity:0; pointer-events:none;
+    transition: opacity .25s ease;
+  }
+  .modal-scrim.open{ opacity:1; pointer-events:auto; }
+  .modal-card{
+    background: var(--surface);
+    border-radius: 28px;
+    max-width: 560px; width:100%;
+    padding: 22px 22px 26px;
+    box-shadow: var(--shadow);
+    transform: scale(.94) translateY(10px);
+    transition: transform .3s cubic-bezier(.2,.7,.2,1);
+  }
+  .modal-scrim.open .modal-card{ transform: scale(1) translateY(0); }
+  .modal-card .mat{ border-radius: 20px; padding: 18px; background: var(--mat); }
+  .modal-card .swatch-lg{ aspect-ratio: 4/5; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); }
+  .modal-info{ display:flex; align-items:flex-start; justify-content:space-between; padding: 18px 6px 4px; gap: 16px; }
+  .modal-info .title{ font-size:19px; font-weight:600; }
+  .modal-info .sub{ margin-top:6px; display:flex; align-items:center; gap:7px; font-size:14px; color: var(--grey); }
+  .modal-close{
+    flex: none;
+    width: 30px; height:30px; border-radius:50%;
+    background: var(--mat); border: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:15px; color: var(--ink-soft);
+  }
+  .modal-close:hover{ color: var(--ink); }
+
+  @media (max-width: 900px){
+    .gallery-grid{ grid-template-columns: repeat(2,1fr); }
+    .stats{ grid-template-columns: 1fr; gap: 32px; }
+    .stats .stat{ border-left:none; border-top:1px solid var(--line); padding-top:24px; }
+    .stats .stat:first-child{ border-top:none; padding-top:0; }
+    .about{ grid-template-columns:1fr; border-radius: 28px; }
+    .nav-links{ display:none; }
+  }
+  @media (max-width: 560px){
+    .gallery-grid{ grid-template-columns: 1fr; }
+    .hero{ padding-top: 76px; }
+    .hero-frame{ aspect-ratio: 4/5; border-radius: 26px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .eyebrow, .hero h1, .hero p.lead, .hero-actions, .hero-banner, .art-card{
+      animation: none !important; opacity:1 !important; transform:none !important;
+    }
+    .art-card, .swatch, .modal-scrim, .modal-card{ transition: none !important; }
+  }
+</style>
+
+<header class="nav">
+  <div class="nav-logo">선율의 미술관</div>
+  <nav class="nav-links">
+    <a href="#gallery">작품</a>
+    <a href="#about">선율 이야기</a>
+    <a href="#visit">방문 안내</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="eyebrow"><span class="dot"></span>온라인 미술관</div>
+  <h1>선율이가 그린<br>작은 세계</h1>
+  <p class="lead">여섯 살 선율이가 크레파스와 물감으로 담아낸 순간들을 모았습니다. 한 장 한 장, 아이가 세상을 보는 방식을 따라가 보세요.</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#gallery">작품 둘러보기</a>
+    <a class="btn-text" href="#about">선율이 이야기 <span class="chev">›</span></a>
+  </div>
+  <div class="hero-banner">
+    <div class="hero-frame">
+      <div class="frame-caption">
+        <span><strong>대표작 · 우리 가족 소풍</strong>여섯 살, 크레파스</span>
+        <span class="year num">2026</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat">
+    <h3 class="num">32</h3>
+    <p>지금까지 전시된 작품 수</p>
+  </div>
+  <div class="stat">
+    <h3 class="num">6</h3>
+    <p>선율이의 현재 나이</p>
+  </div>
+  <div class="stat">
+    <h3>4</h3>
+    <p>즐겨 쓰는 재료</p>
+    <div class="media-legend">
+      <span><i class="swatch-dot medium-crayon"></i>크레파스</span>
+      <span><i class="swatch-dot medium-watercolor"></i>수채화</span>
+      <span><i class="swatch-dot medium-pencil"></i>색연필</span>
+      <span><i class="swatch-dot medium-collage"></i>콜라주</span>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="gallery">
+  <div class="section-head">
+    <h2>최근 작품들</h2>
+    <p>요즘 가장 좋아하는 주제는 바다와 우리 가족이에요. 그림을 누르면 크게 볼 수 있어요.</p>
+  </div>
+  <div class="gallery-grid" id="galleryGrid">
+    <button class="art-card" data-swatch="swatch-1" data-title="우리 가족 소풍" data-sub="크레파스 · 2026.08" data-medium="medium-crayon">
+      <div class="mat"><div class="swatch swatch-1"></div></div>
+      <div class="info">
+        <div class="title">우리 가족 소풍</div>
+        <div class="sub"><i class="swatch-dot medium-crayon"></i>크레파스 · 2026.08</div>
+      </div>
+    </button>
+    <button class="art-card" data-swatch="swatch-2" data-title="깊은 바다" data-sub="수채화 · 2026.07" data-medium="medium-watercolor">
+      <div class="mat"><div class="swatch swatch-2"></div></div>
+      <div class="info">
+        <div class="title">깊은 바다</div>
+        <div class="sub"><i class="swatch-dot medium-watercolor"></i>수채화 · 2026.07</div>
+      </div>
+    </button>
+    <button class="art-card" data-swatch="swatch-3" data-title="해질녘 놀이터" data-sub="색연필 · 2026.07" data-medium="medium-pencil">
+      <div class="mat"><div class="swatch swatch-3"></div></div>
+      <div class="info">
+        <div class="title">해질녘 놀이터</div>
+        <div class="sub"><i class="swatch-dot medium-pencil"></i>색연필 · 2026.07</div>
+      </div>
+    </button>
+    <button class="art-card" data-swatch="swatch-4" data-title="우리 집 마당" data-sub="콜라주 · 2026.06" data-medium="medium-collage">
+      <div class="mat"><div class="swatch swatch-4"></div></div>
+      <div class="info">
+        <div class="title">우리 집 마당</div>
+        <div class="sub"><i class="swatch-dot medium-collage"></i>콜라주 · 2026.06</div>
+      </div>
+    </button>
+    <button class="art-card" data-swatch="swatch-5" data-title="별이 빛나는 밤" data-sub="크레파스 · 2026.06" data-medium="medium-crayon">
+      <div class="mat"><div class="swatch swatch-5"></div></div>
+      <div class="info">
+        <div class="title">별이 빛나는 밤</div>
+        <div class="sub"><i class="swatch-dot medium-crayon"></i>크레파스 · 2026.06</div>
+      </div>
+    </button>
+    <button class="art-card" data-swatch="swatch-6" data-title="봄날의 강아지" data-sub="수채화 · 2026.05" data-medium="medium-watercolor">
+      <div class="mat"><div class="swatch swatch-6"></div></div>
+      <div class="info">
+        <div class="title">봄날의 강아지</div>
+        <div class="sub"><i class="swatch-dot medium-watercolor"></i>수채화 · 2026.05</div>
+      </div>
+    </button>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-portrait"></div>
+  <div class="about-copy">
+    <h2>선율이를 소개해요</h2>
+    <p>선율이는 색을 고르는 데 가장 오랜 시간을 씁니다. 하늘색 하나를 정하기 위해 물감 세 개를 섞어보는 아이예요. 완성된 그림보다 그리는 과정을 더 좋아합니다.</p>
+    <p>이 미술관은 선율이가 그린 그림을 가족과 친구들에게 보여주고, 시간이 지나며 달라지는 아이의 시선을 기록하기 위해 만들었습니다.</p>
+  </div>
+</section>
+
+<section class="cta" id="visit">
+  <h2>새 작품이 궁금하다면</h2>
+  <p>선율이는 매달 새로운 그림을 그려 이곳에 올립니다. 다음 전시 소식을 가장 먼저 받아보세요.</p>
+  <a class="btn-primary" href="#gallery">최신 작품 보기</a>
+</section>
+
+<footer>
+  <span>© 2026 선율의 미술관</span>
+  <span>선율이와 함께 만든 작은 공간</span>
+</footer>
+
+<div class="modal-scrim" id="modalScrim" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="mat"><div class="swatch-lg" id="modalSwatch"></div></div>
+    <div class="modal-info">
+      <div>
+        <div class="title" id="modalTitle">제목</div>
+        <div class="sub" id="modalSub"><i class="swatch-dot" id="modalDot"></i><span id="modalSubText"></span></div>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="닫기">✕</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Scroll reveal for gallery cards
+  var cards = document.querySelectorAll('.art-card');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    cards.forEach(function(c, i){
+      c.style.transitionDelay = (i % 3) * 60 + 'ms';
+      io.observe(c);
+    });
+  } else {
+    cards.forEach(function(c){ c.classList.add('in-view'); });
+  }
+
+  // Click-to-enlarge modal
+  var scrim = document.getElementById('modalScrim');
+  var modalSwatch = document.getElementById('modalSwatch');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalSubText = document.getElementById('modalSubText');
+  var modalDot = document.getElementById('modalDot');
+  var lastFocused = null;
+
+  function openModal(card){
+    lastFocused = document.activeElement;
+    modalSwatch.className = 'swatch-lg ' + card.dataset.swatch;
+    modalTitle.textContent = card.dataset.title;
+    modalSubText.textContent = card.dataset.sub;
+    modalDot.className = 'swatch-dot ' + card.dataset.medium;
+    scrim.classList.add('open');
+    scrim.setAttribute('aria-hidden', 'false');
+    document.getElementById('modalClose').focus();
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(){
+    scrim.classList.remove('open');
+    scrim.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if(lastFocused) lastFocused.focus();
+  }
+
+  cards.forEach(function(card){
+    card.addEventListener('click', function(){ openModal(card); });
+  });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  scrim.addEventListener('click', function(e){ if(e.target === scrim) closeModal(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && scrim.classList.contains('open')) closeModal();
+  });
+</script>
