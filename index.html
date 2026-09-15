@@ -214,6 +214,7 @@
     padding: 0 24px;
     opacity:0; transform: scale(.97);
     animation: pop 1s cubic-bezier(.2,.7,.2,1) .3s forwards;
+    will-change: transform;
   }
   .hero-frame{
     position:relative;
@@ -263,7 +264,32 @@
   .section-head h2{ font-size: clamp(28px, 3.4vw, 40px); font-weight:600; letter-spacing: var(--tracking-tight); }
   .section-head p{ color: var(--grey); font-size:15px; max-width: 36ch; line-height:1.6; }
 
-  .gallery-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .filter-bar{
+    display:flex; flex-wrap:wrap; gap:10px;
+    margin-bottom: 32px;
+  }
+  .filter-pill{
+    padding: 9px 18px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .filter-pill:hover{ border-color: var(--line-strong); }
+  .filter-pill.active{
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  :root[data-theme="dark"] .filter-pill.active{ background: var(--accent); border-color: var(--accent); color:#fff; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .filter-pill.active{ background: var(--accent); border-color: var(--accent); color:#fff; }
+  }
+
+  .gallery-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; grid-auto-flow: dense; }
   .art-card{
     background: var(--surface);
     border: 1px solid var(--line);
@@ -271,12 +297,18 @@
     padding: 14px 14px 18px;
     cursor: pointer;
     text-align: left;
-    transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease, border-color .35s ease;
+    transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease, border-color .35s ease, opacity .3s ease;
     opacity: 0; transform: translateY(18px);
+    position: relative;
   }
   .art-card.in-view{ opacity:1; transform: translateY(0); }
+  .art-card.filtered-out{ display:none; }
   .art-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-soft); border-color: transparent; }
-  .art-card .mat{ border-radius: 16px; padding: 14px; background: var(--mat); }
+  .art-card .mat{
+    border-radius: 16px; padding: 14px; background: var(--mat);
+    transition: transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s ease;
+    transform-style: preserve-3d;
+  }
   .art-card .swatch{
     aspect-ratio: 4/5;
     border-radius: 10px;
@@ -285,10 +317,25 @@
     transition: transform .5s cubic-bezier(.2,.7,.2,1);
   }
   .art-card .swatch img{ width:100%; height:100%; object-fit:cover; }
-  .art-card:hover .swatch{ transform: scale(1.015); }
+  .art-card:hover .swatch{ transform: scale(1.03); }
   .art-card .info{ padding: 16px 6px 4px; }
   .art-card .title{ font-size:15px; font-weight:600; }
   .art-card .sub{ margin-top:6px; font-size:13px; color: var(--grey); }
+
+  .art-card.featured{ grid-column: span 2; }
+  .art-card.featured .swatch{ aspect-ratio: 16/10; }
+  .art-card.featured .title{ font-size:18px; }
+  .art-card .badge{
+    position:absolute; top:26px; left:26px; z-index:2;
+    padding:5px 12px; border-radius:100px;
+    background: color-mix(in srgb, var(--accent-c, var(--accent)) 88%, black 0%);
+    color:#fff; font-size:11px; font-weight:600; letter-spacing:.02em;
+    box-shadow: 0 6px 16px -6px rgba(0,0,0,.4);
+  }
+  @media (max-width: 900px){
+    .art-card.featured{ grid-column: span 1; }
+    .art-card.featured .swatch{ aspect-ratio: 4/5; }
+  }
 
   .swatch-fallback{ background: linear-gradient(140deg,#ffb37a,#ff6f91 60%,#4d7bf0); }
 
@@ -304,7 +351,10 @@
     margin: 0 24px;
     max-width: 1180px;
     margin-inline: auto;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
   }
+  .about.in-view{ opacity:1; transform:none; }
   .about-portrait{
     aspect-ratio: 1/1;
     border-radius: 28px;
@@ -327,9 +377,9 @@
 
   .link-cards{
     display:grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    max-width: 720px;
+    max-width: 920px;
     margin: 0 auto;
     text-align:left;
   }
@@ -351,7 +401,7 @@
     transition: transform .2s ease;
   }
   .link-card:hover .lc-arrow{ transform: translate(3px,-3px); }
-  @media (max-width: 560px){
+  @media (max-width: 760px){
     .link-cards{ grid-template-columns: 1fr; }
   }
 
@@ -375,6 +425,7 @@
   }
   .modal-scrim.open{ opacity:1; pointer-events:auto; }
   .modal-card{
+    position:relative;
     background: var(--surface);
     border-radius: 28px;
     max-width: 560px; width:100%;
@@ -382,12 +433,21 @@
     box-shadow: var(--shadow);
     transform: scale(.94) translateY(10px);
     transition: transform .3s cubic-bezier(.2,.7,.2,1);
+    overflow: hidden;
   }
   .modal-scrim.open .modal-card{ transform: scale(1) translateY(0); }
-  .modal-card .mat{ border-radius: 20px; padding: 18px; background: var(--mat); }
+  .modal-card::before{
+    content:"";
+    position:absolute; left:50%; top:0; width:70%; height:200px;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle, var(--accent-c, var(--accent)) 0%, transparent 68%);
+    opacity:.4; filter: blur(14px);
+    pointer-events:none;
+  }
+  .modal-card .mat{ position:relative; border-radius: 20px; padding: 18px; background: var(--mat); }
   .modal-card .swatch-lg{ aspect-ratio: 4/5; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); overflow:hidden; }
   .modal-card .swatch-lg img{ width:100%; height:100%; object-fit:cover; }
-  .modal-info{ display:flex; align-items:flex-start; justify-content:space-between; padding: 18px 6px 4px; gap: 16px; }
+  .modal-info{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; padding: 18px 6px 4px; gap: 16px; }
   .modal-info .title{ font-size:19px; font-weight:600; }
   .modal-info .sub{ margin-top:6px; font-size:14px; color: var(--grey); }
   .modal-close{
@@ -409,8 +469,15 @@
   }
   @media (max-width: 560px){
     .gallery-grid{ grid-template-columns: 1fr; }
+    .art-card.featured{ grid-column: span 1; }
     .hero{ padding-top: 76px; }
     .hero-frame{ aspect-ratio: 4/5; border-radius: 26px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .art-card .mat{ transform:none !important; }
+    .hero-banner{ transform:none !important; }
+    .about{ opacity:1 !important; transform:none !important; }
   }
 </style>
 
@@ -445,7 +512,7 @@
     <a class="btn-primary" href="#gallery">작품 둘러보기</a>
     <a class="btn-text" href="#about">선율이 이야기 <span class="chev">›</span></a>
   </div>
-  <div class="hero-banner">
+  <div class="hero-banner" id="heroBanner">
     <div class="hero-frame" id="heroFrame">
       <div class="frame-caption">
         <span><strong id="heroTitle">대표작</strong><span id="heroSub">여섯 살, 그림</span></span>
@@ -475,6 +542,7 @@
     <h2>선율이의 작품들</h2>
     <p>그림을 누르면 크게 볼 수 있어요. 최근 그림부터 차례로 모았습니다.</p>
   </div>
+  <div class="filter-bar" id="filterBar" role="tablist" aria-label="재료별 보기"></div>
   <div class="gallery-grid" id="galleryGrid"></div>
 </section>
 
@@ -499,6 +567,11 @@
     <a class="link-card" href="https://julyjunghoon.github.io/siyul-art-graph/#gallery" target="_blank" rel="noopener">
       <div class="lc-title">시율이의 온라인 미술관</div>
       <div class="lc-sub">동생 박시율의 작품 보기</div>
+      <span class="lc-arrow">↗</span>
+    </a>
+    <a class="link-card" href="https://julyjunghoon.github.io/worldtour_in_Mylife/" target="_blank" rel="noopener">
+      <div class="lc-title">가족여행</div>
+      <div class="lc-sub">우리 가족 여행 이야기</div>
       <span class="lc-arrow">↗</span>
     </a>
   </div>
@@ -552,6 +625,8 @@
   // 최근 작품이 먼저 보이도록 순서를 뒤집어요.
   const RECENT_FIRST = ARTWORKS.slice().reverse();
 
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   /* ---------- stats + hero banner (실제 데이터로 채우기) ---------- */
 
   document.getElementById('statCount').textContent = ARTWORKS.length;
@@ -573,19 +648,71 @@
     }
   }
 
+  /* ---------- dominant color extraction (실제 사진 → 카드 포인트 컬러) ---------- */
+
+  function applyDominantColor(imgEl, targetEl){
+    try{
+      const canvas = document.createElement('canvas');
+      canvas.width = 12; canvas.height = 12;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(imgEl, 0, 0, 12, 12);
+      const data = ctx.getImageData(0, 0, 12, 12).data;
+      let r=0,g=0,b=0,n=0;
+      for (let i=0; i<data.length; i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
+      r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+      targetEl.style.setProperty('--accent-c', 'rgb('+r+','+g+','+b+')');
+    } catch(e){ /* 캔버스 접근 실패 시 조용히 무시 */ }
+  }
+
+  /* ---------- filter pills (재료별) ---------- */
+
+  const filterBar = document.getElementById('filterBar');
+  const mediums = Array.from(new Set(ARTWORKS.map(a => a.medium))).filter(Boolean);
+
+  function makePill(label, value, active){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'filter-pill' + (active ? ' active' : '');
+    b.textContent = label;
+    b.dataset.filter = value;
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+    return b;
+  }
+
+  let currentFilter = 'all';
+  if (filterBar && mediums.length > 1) {
+    filterBar.appendChild(makePill('전체', 'all', true));
+    mediums.forEach(m => filterBar.appendChild(makePill(m, m, false)));
+    filterBar.addEventListener('click', (e)=>{
+      const pill = e.target.closest('.filter-pill');
+      if (!pill) return;
+      currentFilter = pill.dataset.filter;
+      filterBar.querySelectorAll('.filter-pill').forEach(p=>{
+        p.classList.toggle('active', p === pill);
+        p.setAttribute('aria-selected', p === pill ? 'true' : 'false');
+      });
+      cards.forEach(c=>{
+        const show = currentFilter === 'all' || c.dataset.medium === currentFilter;
+        c.classList.toggle('filtered-out', !show);
+      });
+    });
+  }
+
   /* ---------- gallery grid ---------- */
 
   const grid = document.getElementById('galleryGrid');
   const cards = [];
 
-  RECENT_FIRST.forEach((a)=>{
+  RECENT_FIRST.forEach((a, idx)=>{
     const el = document.createElement('button');
-    el.className = 'art-card';
+    el.className = 'art-card' + (idx === 0 ? ' featured' : '');
     el.type = 'button';
     const swatchInner = a.img
       ? '<img src="'+a.img+'" alt="'+a.title+'" loading="lazy">'
       : '';
     el.innerHTML =
+      (idx === 0 ? '<span class="badge">최신 작품</span>' : '') +
       '<div class="mat"><div class="swatch'+(a.img?'':' swatch-fallback')+'">'+swatchInner+'</div></div>' +
       '<div class="info">' +
         '<div class="title">'+a.title+'</div>' +
@@ -594,10 +721,37 @@
     el.dataset.title = a.title;
     el.dataset.sub = a.medium + ' · ' + a.date;
     el.dataset.img = a.img || '';
+    el.dataset.medium = a.medium || '';
     el.addEventListener('click', ()=> openModal(el));
+
+    if (a.img) {
+      const imgEl = el.querySelector('.swatch img');
+      if (imgEl) {
+        if (imgEl.complete) applyDominantColor(imgEl, el);
+        else imgEl.addEventListener('load', ()=> applyDominantColor(imgEl, el));
+      }
+    }
+
     grid.appendChild(el);
     cards.push(el);
   });
+
+  /* ---------- 3D tilt on hover (mat 레이어만 기울여요) ---------- */
+
+  if (!reduceMotion && window.matchMedia('(hover: hover)').matches) {
+    cards.forEach(card=>{
+      const mat = card.querySelector('.mat');
+      if (!mat) return;
+      card.style.perspective = '800px';
+      card.addEventListener('mousemove', (e)=>{
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        mat.style.transform = 'rotateY('+(px*8)+'deg) rotateX('+(py*-8)+'deg)';
+      });
+      card.addEventListener('mouseleave', ()=>{ mat.style.transform = ''; });
+    });
+  }
 
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries)=>{
@@ -612,13 +766,18 @@
       c.style.transitionDelay = (i % 3) * 60 + 'ms';
       io.observe(c);
     });
+    const aboutEl = document.querySelector('.about');
+    if (aboutEl) io.observe(aboutEl);
   } else {
     cards.forEach((c)=> c.classList.add('in-view'));
+    const aboutEl = document.querySelector('.about');
+    if (aboutEl) aboutEl.classList.add('in-view');
   }
 
   /* ---------- click-to-enlarge modal ---------- */
 
   const scrim = document.getElementById('modalScrim');
+  const modalCard = document.querySelector('.modal-card');
   const modalSwatch = document.getElementById('modalSwatch');
   const modalTitle = document.getElementById('modalTitle');
   const modalSubText = document.getElementById('modalSubText');
@@ -632,6 +791,11 @@
     modalSwatch.className = 'swatch-lg' + (card.dataset.img ? '' : ' swatch-fallback');
     modalTitle.textContent = card.dataset.title;
     modalSubText.textContent = card.dataset.sub;
+    const accentC = card.style.getPropertyValue('--accent-c');
+    if (modalCard) {
+      if (accentC) modalCard.style.setProperty('--accent-c', accentC);
+      else modalCard.style.removeProperty('--accent-c');
+    }
     scrim.classList.add('open');
     scrim.setAttribute('aria-hidden', 'false');
     document.getElementById('modalClose').focus();
@@ -649,6 +813,22 @@
     if (e.key === 'Escape' && scrim.classList.contains('open')) closeModal();
   });
 
+  /* ---------- hero banner parallax ---------- */
+
+  const heroBanner = document.getElementById('heroBanner');
+  if (heroBanner && !reduceMotion) {
+    let ticking = false;
+    window.addEventListener('scroll', ()=>{
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(()=>{
+        const y = Math.min(window.scrollY, 500);
+        heroBanner.style.transform = 'translateY('+(y*0.08)+'px)';
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
   /* ---------- intro video + scroll button ---------- */
 
   const galleryEl = document.getElementById('gallery');
@@ -659,7 +839,6 @@
     });
   }
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const introVideo = document.getElementById('intro-video');
   if (introVideo) {
     if (reduceMotion) {
