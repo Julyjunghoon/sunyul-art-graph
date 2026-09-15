@@ -1,1 +1,1 @@
-julyjunghoon.github.io/sunyul-art-grap
+julyjunghoon.github.io/sunyul-art-graph
